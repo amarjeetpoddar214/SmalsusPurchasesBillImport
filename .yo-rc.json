@@ -1,0 +1,18 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "18.18.0",
+    "sdksVersions": {},
+    "version": "1.21.1",
+    "libraryName": "smalsus-purchases",
+    "libraryId": "b9518a35-2f6c-4f1d-b2e1-d361bed9a57b",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "smalsus-purchases",
+    "solutionShortDescription": "smalsus-purchases description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}

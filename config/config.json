@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "smalsus-purchases-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/smalsusPurchases/SmalsusPurchasesWebPart.js",
+          "manifest": "./src/webparts/smalsusPurchases/SmalsusPurchasesWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "SmalsusPurchasesWebPartStrings": "lib/webparts/smalsusPurchases/loc/{locale}.js"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "smalsus-purchases-client-side-solution",
+    "id": "b9518a35-2f6c-4f1d-b2e1-d361bed9a57b",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.21.1"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "smalsus-purchases description"
+      },
+      "longDescription": {
+        "default": "smalsus-purchases description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "smalsus-purchases Feature",
+        "description": "The feature that activates elements of the smalsus-purchases solution.",
+        "id": "9accf5db-9e71-422d-ab90-f255e4964111",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/smalsus-purchases.sppkg"
+  }
+}
