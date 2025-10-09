@@ -68,9 +68,10 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({ purchase, onSave, onClose, 
           .get();
 
         setTransactions(items.map((item: any) => ({
-          id: item.Id.toString(),
+          id: `t-${item.Id}`, // <--- standard id format
           title: item.Title
         })));
+
       } catch (error) {
         console.error("Error loading transactions:", error);
       }

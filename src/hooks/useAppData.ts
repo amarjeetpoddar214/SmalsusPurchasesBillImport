@@ -54,10 +54,12 @@ export const useAppData = (context: WebPartContext) => {
                 amount: Number(item.amount),
                 date: new Date(item.date).toISOString().slice(0, 10),
                 category: item.category || 'Other',
-                matchedBankTransactionId: item.matchTransaction?.Id || null,
+                // store the transaction id in the same format we use for transactions: 't-<id>'
+                matchedBankTransactionId: item.matchTransaction?.Id ? `t-${item.matchTransaction.Id}` : null,
                 matchedBankTransactionTitle: item.matchTransaction?.Title || '',
                 billImage: item.BillImageUrl?.Url || undefined
             }));
+
 
             // Fetch Transactions
             const transactionsRes = await web.lists.getById(transactionsListId).items.getAll();
@@ -68,8 +70,18 @@ export const useAppData = (context: WebPartContext) => {
                 description: item.Title,
                 amount: Number(item.amount),
                 date: new Date(item.date).toISOString().slice(0, 10),
-                type: (item.typeChoice || 'debit').toLowerCase() === 'credit' ? 'credit' : 'debit'
+                type: (item.typeChoice || 'debit').toLowerCase() === 'credit' ? 'credit' : 'debit',
+                matchedPurchaseId: null // fill in from purchases below
             }));
+
+            // Link transactions -> purchases so UI knows a transaction's matched purchase
+            mappedTransactions.forEach(t => {
+                const matchedPurchase = mappedPurchases.find(p => p.matchedBankTransactionId === t.id);
+                if (matchedPurchase) {
+                    t.matchedPurchaseId = matchedPurchase.id;
+                }
+            });
+
 
             // Convert to AppData grouped by month
             const newAppData: AppData = {};
@@ -146,7 +158,9 @@ export const useAppData = (context: WebPartContext) => {
                     amount: purchaseData.amount,
                     date: purchaseData.date,
                     category: purchaseData.category,
-                    matchTransactionId: purchaseData.matchedBankTransactionId || null,
+                    matchTransactionId: purchaseData.matchedBankTransactionId
+                        ? Number(String(purchaseData.matchedBankTransactionId).replace(/^t-/, ''))
+                        : null,
                     BillImageUrl: uploadedFileUrl
                         ? {
                             __metadata: { type: 'SP.FieldUrlValue' },
@@ -217,7 +231,9 @@ export const useAppData = (context: WebPartContext) => {
                     amount: updatedPurchase.amount,
                     date: updatedPurchase.date,
                     category: updatedPurchase.category,
-                    matchTransactionId: updatedPurchase.matchedBankTransactionId || null
+                    matchTransactionId: updatedPurchase.matchedBankTransactionId
+                        ? Number(String(updatedPurchase.matchedBankTransactionId).replace(/^t-/, ''))
+                        : null
                 };
 
                 if (uploadedFileUrl) {
@@ -333,7 +349,7 @@ export const useAppData = (context: WebPartContext) => {
                     typeChoice: newTransaction.type
                 });
 
-                newTransaction.id = spItem.data.Id.toString();
+                newTransaction.id = `t-${spItem.data.Id}`; // standard 't-<SPId>' id
 
                 const monthKey = getMonthKey(newTransaction.date);
                 setAppData(prev => {

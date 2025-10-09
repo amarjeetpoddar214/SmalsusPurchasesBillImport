@@ -39,6 +39,7 @@ const App: React.FC<AppProps> = ({ context }) => {
   const [isMatchingModalOpen, setIsMatchingModalOpen] = useState(false);
   const [transactionToMatch, setTransactionToMatch] = useState<BankTransaction | null>(null);
 
+
   const handlePreviousMonth = () => {
     setSelectedMonth(prev => {
       let [year, month] = prev.split('-').map(Number);
@@ -192,7 +193,13 @@ const App: React.FC<AppProps> = ({ context }) => {
     return purchases.reduce((total, p) => total + p.amount, 0).toFixed(2);
   }, [purchases]);
 
-  const unmatchedPurchases = useMemo(() => allPurchases.filter(p => !p.matchedBankTransactionId), [allPurchases]);
+  // App.tsx
+  const unmatchedPurchases = useMemo(() => {
+    if (!transactionToMatch) return [];
+    const monthKey = transactionToMatch.date.slice(0, 7); // YYYY-MM
+    return appData[monthKey]?.purchases.filter(p => !p.matchedBankTransactionId) || [];
+  }, [appData, transactionToMatch]);
+
 
   if (!isLoaded) {
     return (
