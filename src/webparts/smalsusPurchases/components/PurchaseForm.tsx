@@ -176,6 +176,8 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({ purchase, onSave, onClose, 
 
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-1">Bill / Receipt</label>
+
+          {/* Hidden file input */}
           <input
             type="file"
             ref={fileInputRef}
@@ -183,8 +185,11 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({ purchase, onSave, onClose, 
             className="hidden"
             accept="image/png, image/jpeg, image/webp, application/pdf"
           />
+
+          {/* If there is an existing file or preview */}
           {billImage ? (
             <div className="mt-2 bg-slate-900 rounded-md p-3 flex flex-col items-center justify-center text-center">
+              {/* Check if it's a PDF */}
               {billImage.toLowerCase().endsWith('.pdf') || billImage.startsWith('data:application/pdf') ? (
                 <div className="flex flex-col items-center space-y-2">
                   <img
@@ -202,7 +207,10 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({ purchase, onSave, onClose, 
                   </a>
                   <Button
                     type="button"
-                    onClick={() => setBillImage(null)}
+                    onClick={() => {
+                      setBillImage(null);
+                      setBillFile(null);
+                    }}
                     variant="secondary"
                     size="normal"
                   >
@@ -219,7 +227,10 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({ purchase, onSave, onClose, 
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
                     <Button
                       type="button"
-                      onClick={() => setBillImage(null)}
+                      onClick={() => {
+                        setBillImage(null);
+                        setBillFile(null);
+                      }}
                       variant="secondary"
                       size="normal"
                     >
@@ -241,9 +252,8 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({ purchase, onSave, onClose, 
               <span>Click to upload an image or PDF</span>
             </button>
           )}
-
-
         </div>
+
 
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" onClick={onClose} variant="secondary">Cancel</Button>

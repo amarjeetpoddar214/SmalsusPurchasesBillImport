@@ -43,8 +43,8 @@ export const useAppData = (context: WebPartContext) => {
             // Fetch Purchases
             const purchasesRes = await web.lists.getById(purchasesListId)
                 .items
-                .select('Id', 'Title', 'amount', 'date', 'category', 'matchTransaction/Id', 'matchTransaction/Title', 'BillImageUrl')
-                .expand('matchTransaction')
+                .select('Id', 'Title', 'amount', 'date', 'category', 'matchTransaction/Id', 'matchTransaction/Title', 'AttachmentFiles', 'AttachmentFiles/ServerRelativeUrl')
+                .expand('matchTransaction', 'AttachmentFiles')
                 .getAll();
             console.log('PurchaseList', purchasesRes);
 
@@ -57,7 +57,7 @@ export const useAppData = (context: WebPartContext) => {
                 // store the transaction id in the same format we use for transactions: 't-<id>'
                 matchedBankTransactionId: item.matchTransaction?.Id ? `t-${item.matchTransaction.Id}` : null,
                 matchedBankTransactionTitle: item.matchTransaction?.Title || '',
-                billImage: item.BillImageUrl?.Url || undefined
+                billImage: item.AttachmentFiles?.length > 0 ? item.AttachmentFiles[0].ServerRelativeUrl : undefined
             }));
 
 
@@ -134,25 +134,8 @@ export const useAppData = (context: WebPartContext) => {
             setIsLoaded(false);
             try {
                 const web = new Web(webURL);
-                let uploadedFileUrl: string | undefined = undefined;
 
-                // compute a reliable server-relative path for the library folder
-                const siteServerRelativeUrl = new URL(webURL).pathname.replace(/\/$/, ''); // e.g. '/sites/Smalsus'
-                const folderServerRelativeUrl = `${siteServerRelativeUrl}/BillImages`; // update 'BillImages' if your library is named differently
-
-                // 1️⃣ Upload file if exists (use raw File - works for PDFs & images)
-                if (purchaseData.billFile) {
-                    console.log('Uploading file to folder:', folderServerRelativeUrl, purchaseData.billFile.name);
-                    const uploadedFile = await web
-                        .getFolderByServerRelativeUrl(folderServerRelativeUrl)
-                        .files.add(purchaseData.billFile.name, purchaseData.billFile, true);
-
-                    console.log('Upload response:', uploadedFile);
-                    uploadedFileUrl = uploadedFile.data.ServerRelativeUrl; // server-relative URL, e.g. /sites/Smalsus/BillImages/receipt.pdf
-                    console.log('Uploaded file serverRelativeUrl:', uploadedFileUrl);
-                }
-
-                // 2️⃣ Save item to SharePoint (use SP.FieldUrlValue for Hyperlink/Picture column)
+                // 1️⃣ Create item first (without attachment)
                 const spItem = await web.lists.getById(purchasesListId).items.add({
                     Title: purchaseData.name,
                     amount: purchaseData.amount,
@@ -160,17 +143,19 @@ export const useAppData = (context: WebPartContext) => {
                     category: purchaseData.category,
                     matchTransactionId: purchaseData.matchedBankTransactionId
                         ? Number(String(purchaseData.matchedBankTransactionId).replace(/^t-/, ''))
-                        : null,
-                    BillImageUrl: uploadedFileUrl
-                        ? {
-                            __metadata: { type: 'SP.FieldUrlValue' },
-                            Url: uploadedFileUrl,
-                            Description: 'Bill/Receipt'
-                        }
                         : null
                 });
 
-                // 3️⃣ Map SP item to local Purchase and update state
+                // 2️⃣ If file exists, upload it as list attachment
+                let uploadedFileUrl: string | undefined = undefined;
+                if (purchaseData.billFile) {
+                    const item = web.lists.getById(purchasesListId).items.getById(spItem.data.Id);
+                    await item.attachmentFiles.add(purchaseData.billFile.name, purchaseData.billFile);
+                    const attachments = await item.attachmentFiles.get();
+                    uploadedFileUrl = attachments?.[0]?.ServerRelativeUrl;
+                }
+
+                // 3️⃣ Prepare new purchase object
                 const newPurchase: Purchase = {
                     id: `p-${spItem.data.Id}`,
                     name: purchaseData.name,
@@ -179,10 +164,10 @@ export const useAppData = (context: WebPartContext) => {
                     category: purchaseData.category,
                     matchedBankTransactionId: purchaseData.matchedBankTransactionId || null,
                     matchedBankTransactionTitle: purchaseData.matchedBankTransactionTitle || '',
-                    billImage: uploadedFileUrl // store server-relative URL for display
+                    billImage: uploadedFileUrl
                 };
 
-                // 4️⃣ Update state grouped by month
+                // 4️⃣ Update UI
                 const monthKey = getMonthKey(newPurchase.date);
                 setAppData(prev => {
                     const newAppData = { ...prev };
@@ -200,33 +185,24 @@ export const useAppData = (context: WebPartContext) => {
                 setIsLoaded(true);
             }
         },
-        [webURL, purchasesListId] // add dependencies
+        [webURL, purchasesListId]
     );
 
 
 
 
 
+
     const updatePurchase = useCallback(
-        async (updatedPurchase: Purchase & { billFile?: File }) => {
+        async (updatedPurchase: Purchase & { billFile?: File; billImage?: string | null }) => {
             setIsLoaded(false);
             try {
                 const web = new Web(webURL);
-                const siteServerRelativeUrl = new URL(webURL).pathname.replace(/\/$/, '');
-                const folderServerRelativeUrl = `${siteServerRelativeUrl}/BillImages`;
+                const itemId = Number(updatedPurchase.id.replace('p-', ''));
+                const item = web.lists.getById(purchasesListId).items.getById(itemId);
 
-                let uploadedFileUrl: string | undefined = undefined;
-
-                // Upload new bill file if provided
-                if (updatedPurchase.billFile) {
-                    const uploadedFile = await web
-                        .getFolderByServerRelativeUrl(folderServerRelativeUrl)
-                        .files.add(updatedPurchase.billFile.name, updatedPurchase.billFile, true);
-                    uploadedFileUrl = uploadedFile.data.ServerRelativeUrl;
-                }
-
-                // Prepare SharePoint payload
-                const updatePayload: any = {
+                // Update fields
+                await item.update({
                     Title: updatedPurchase.name,
                     amount: updatedPurchase.amount,
                     date: updatedPurchase.date,
@@ -234,47 +210,45 @@ export const useAppData = (context: WebPartContext) => {
                     matchTransactionId: updatedPurchase.matchedBankTransactionId
                         ? Number(String(updatedPurchase.matchedBankTransactionId).replace(/^t-/, ''))
                         : null
-                };
+                });
 
-                if (uploadedFileUrl) {
-                    updatePayload.BillImageUrl = {
-                        __metadata: { type: 'SP.FieldUrlValue' },
-                        Url: uploadedFileUrl,
-                        Description: 'Bill/Receipt'
-                    };
+                let finalBillUrl = updatedPurchase.billImage;
+
+                // If new file uploaded → delete existing attachment → upload new
+                if (updatedPurchase.billFile) {
+                    const existing = await item.attachmentFiles.get();
+                    for (const att of existing) {
+                        await web.getFileByServerRelativeUrl(att.ServerRelativeUrl).delete();
+                    }
+                    await item.attachmentFiles.add(updatedPurchase.billFile.name, updatedPurchase.billFile);
+                    const newAtt = await item.attachmentFiles.get();
+                    finalBillUrl = newAtt?.[0]?.ServerRelativeUrl;
+                } else if (updatedPurchase.billImage === null) {
+                    // If user removed the file manually
+                    const existing = await item.attachmentFiles.get();
+                    for (const att of existing) {
+                        await web.getFileByServerRelativeUrl(att.ServerRelativeUrl).delete();
+                    }
+                    finalBillUrl = undefined;
                 }
-
-                // Update SharePoint item
-                await web.lists
-                    .getById(purchasesListId)
-                    .items.getById(Number(updatedPurchase.id.replace('p-', '')))
-                    .update(updatePayload);
-
-                // Use new file URL if uploaded, else keep existing
-                const finalBillUrl = uploadedFileUrl ?? updatedPurchase.billImage;
 
                 // Update local state
                 setAppData(prev => {
                     const newAppData = { ...prev };
-
-                    // Remove old purchase from all months
                     for (const month in newAppData) {
-                        if (Object.prototype.hasOwnProperty.call(newAppData, month)) {
-                            newAppData[month].purchases = newAppData[month].purchases.filter(
-                                p => p.id !== updatedPurchase.id
-                            );
-                        }
+                        newAppData[month].purchases = newAppData[month].purchases.filter(
+                            p => p.id !== updatedPurchase.id
+                        );
                     }
 
-                    // Add updated purchase to correct month
                     const monthKey = updatedPurchase.date.slice(0, 7);
                     const monthData = newAppData[monthKey] || { purchases: [], transactions: [] };
                     monthData.purchases = [
                         ...monthData.purchases,
-                        { ...updatedPurchase, billImage: finalBillUrl } // <-- use finalBillUrl
+                        { ...updatedPurchase, billImage: finalBillUrl }
                     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-                    newAppData[monthKey] = monthData;
 
+                    newAppData[monthKey] = monthData;
                     return newAppData;
                 });
             } catch (error) {
@@ -286,6 +260,7 @@ export const useAppData = (context: WebPartContext) => {
         },
         [webURL, purchasesListId]
     );
+
 
 
 

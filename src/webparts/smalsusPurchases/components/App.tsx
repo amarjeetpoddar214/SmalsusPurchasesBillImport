@@ -139,26 +139,42 @@ const App: React.FC<AppProps> = ({ context }) => {
 
 
 
-  const handleUnmatch = useCallback((transactionId: string, purchaseId: string) => {
+  const handleUnmatch = useCallback(async (transactionId: string, purchaseId: string) => {
+    // find the current objects (we read from allTransactions/allPurchases)
     const transaction = allTransactions.find(t => t.id === transactionId);
     const purchase = allPurchases.find(p => p.id === purchaseId);
+
     if (transaction && purchase) {
-      updateTransaction({ ...transaction, matchedPurchaseId: null });
-      updatePurchase({ ...purchase, matchedBankTransactionId: null });
+      // First update the transaction (it is independent)
+      await updateTransaction({ ...transaction, matchedPurchaseId: null });
+
+      // Then update the purchase to remove the matchedTransaction reference
+      // (pass billImage to avoid accidental clearing)
+      await updatePurchase({ ...purchase, matchedBankTransactionId: null, billImage: purchase.billImage });
     }
   }, [allTransactions, allPurchases, updateTransaction, updatePurchase]);
 
-  const handleDeletePurchase = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this purchase?')) {
-      const purchaseToDelete = allPurchases.find(p => p.id === id);
-      if (purchaseToDelete) {
-        if (purchaseToDelete.matchedBankTransactionId) {
-          handleUnmatch(purchaseToDelete.matchedBankTransactionId, id);
-        }
-        deletePurchase(purchaseToDelete);
+
+  const handleDeletePurchase = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this purchase?')) return;
+
+    const purchaseToDelete = allPurchases.find(p => p.id === id);
+    if (!purchaseToDelete) return;
+
+    try {
+      // If matched, first unmatch (and WAIT for it to finish)
+      if (purchaseToDelete.matchedBankTransactionId) {
+        await handleUnmatch(purchaseToDelete.matchedBankTransactionId, id);
       }
+
+      // Now delete the purchase (wait for SharePoint to delete it)
+      await deletePurchase(purchaseToDelete);
+    } catch (error) {
+      console.error('Error while unmatching/deleting purchase:', error);
+      alert('Failed to delete purchase. Please try again.');
     }
   };
+
 
   const handleSaveTransaction = (transactionData: Omit<BankTransaction, 'id'>) => {
     addTransaction(transactionData);
