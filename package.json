@@ -25,7 +25,7 @@
     "recharts": "^3.2.1",
     "sp-pnp-js": "^3.0.10",
     "tslib": "2.3.1",
-    "xlsx": "latest"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@microsoft/eslint-config-spfx": "1.21.1",

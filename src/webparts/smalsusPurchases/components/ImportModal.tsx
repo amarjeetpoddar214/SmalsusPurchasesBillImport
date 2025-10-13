@@ -19,19 +19,17 @@ const ImportModal: React.FC<ImportModalProps> = ({ onSave, onClose }) => {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDownloadTemplate = () => {
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + "Description,Date,Amount,Type\n"
-      + '"Zomato Order","2024-08-01",450.00,"debit"\n'
-      + '"Salary credit","2024-07-31",75000.00,"credit"\n';
+    const templateData = [
+      { Description: 'Zomato Order', Date: '2024-08-01', Amount: 450, Type: 'debit' },
+      { Description: 'Salary credit', Date: '2024-07-31', Amount: 75000, Type: 'credit' },
+    ];
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "transaction_template.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const ws = XLSX.utils.json_to_sheet(templateData, { dateNF: 'yyyy-mm-dd' });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+    XLSX.writeFile(wb, 'transaction_template.xlsx');
   };
+
 
   const processFile = (selectedFile: File) => {
     if (!selectedFile) return;
