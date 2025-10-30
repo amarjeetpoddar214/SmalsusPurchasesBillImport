@@ -44,11 +44,12 @@ const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 flex-wrap">
           <div className="flex items-center space-x-2">
-            <img
-              src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAfCAMAAACxiD++AAAAllBMVEVHcEwrSnbw+Px+zPVqyPWyzuBIX4Msr/BsxfRleJUzsfFEW4FOvPUHqO8GMmU8tPFwhaFtgp9DWoBAtfFHt/E3UXouSnQ5t/EhQ3E1s/AtsPBhv/KGqL9gc5EAp+4AMGQALmIAaMcAqvAAassAY8IAKlwVqu8GiNkAZsYAmeUAPn4cPGsAc84jQm8BUJwONGYAWq0AXLHryHn4AAAAHnRSTlMAlAs7Mh14/Vdi5td1YsDaPzO9yJG/+mPBpZiVZZh2fWC9AAABIUlEQVQokZXQ6VaDMBAF4IDsi6dQu7hlBkKgUGj1/V/OEIIghKPef5zvksmEkH/EtrxTHEdxfPIsa4neS1DSecrS3T9/85NLddkrtvRMS3PwBz1TGqkDNv6nwTh/w0vrlwNex+VXksuMA4i3ZFq1jLXV21ahKi6XLGMND23NknnNhAq/ccBuJwvmvFAXg39yAMB7IhvB9H9VZDJF7yJHWYjWDjgU8H3+EHm9dHGN4ZrlhovGcE9PNuT1MvbBJwd01Kouzdu+wLKGwyxojM8VVRljrLghgr7gc2ga4D95GkHMKwLikkUhUYVwbdKP4wC9A/rTAK0f1AGp1hFD5bu7TrEbNyDhtf9GtQX2+0B38MksduI7hpGeH0XOqeH4Nvl7vgDxS1O9aYSxlQAAAABJRU5ErkJggg=='
-              alt="Site Logo"
+            {/* <img
+              src={`${context.pageContext.site.absoluteUrl}/_api/GroupService/GetGroupImage?id='22e6cdcf-41da-4a5c-ae82-508c5dfeb60d'&hash=637932001185380118`}
+              alt="Site Group Image"
               className="h-8 w-8 rounded-full object-cover"
-            />
+            /> */}
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAfCAMAAACxiD++AAAAllBMVEVHcEwrSnbw+Px+zPVqyPWyzuBIX4Msr/BsxfRleJUzsfFEW4FOvPUHqO8GMmU8tPFwhaFtgp9DWoBAtfFHt/E3UXouSnQ5t/EhQ3E1s/AtsPBhv/KGqL9gc5EAp+4AMGQALmIAaMcAqvAAassAY8IAKlwVqu8GiNkAZsYAmeUAPn4cPGsAc84jQm8BUJwONGYAWq0AXLHryHn4AAAAHnRSTlMAlAs7Mh14/Vdi5td1YsDaPzO9yJG/+mPBpZiVZZh2fWC9AAABIUlEQVQokZXQ6VaDMBAF4IDsi6dQu7hlBkKgUGj1/V/OEIIghKPef5zvksmEkH/EtrxTHEdxfPIsa4neS1DSecrS3T9/85NLddkrtvRMS3PwBz1TGqkDNv6nwTh/w0vrlwNex+VXksuMA4i3ZFq1jLXV21ahKi6XLGMND23NknnNhAq/ccBuJwvmvFAXg39yAMB7IhvB9H9VZDJF7yJHWYjWDjgU8H3+EHm9dHGN4ZrlhovGcE9PNuT1MvbBJwd01Kouzdu+wLKGwyxojM8VVRljrLghgr7gc2ga4D95GkHMKwLikkUhUYVwbdKP4wC9A/rTAK0f1AGp1hFD5bu7TrEbNyDhtf9GtQX2+0B38MksduI7hpGeH0XOqeH4Nvl7vgDxS1O9aYSxlQAAAABJRU5ErkJggg==" alt="Site Logo" />
             <h1 className="text-2xl font-bold text-white">{dynamicName}</h1>
           </div>
 
